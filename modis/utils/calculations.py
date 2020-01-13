@@ -56,12 +56,12 @@ def calculateMeanStdev(product, bandName, doy, step, start, finish, point, study
       .filterBounds(point) \
       .filterDate(start, finish) \
       .filter(doyFilter) \
-      .map(addMask(product, product, isItNight)) \
+      .map(addMask(product, resolution, product, isItNight)) \
       .map(addMaskedData(product)) \
       .map(addCelsiusBand(product, bandName))
       
   
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
     
     mean = filteredCollection.select('LSTCelsius').mean().clip(studyArea)
     stdev = filteredCollection.select('LSTCelsius').reduce(ee.Reducer.stdDev()).clip(studyArea)
@@ -69,10 +69,10 @@ def calculateMeanStdev(product, bandName, doy, step, start, finish, point, study
     saveRes = dict()
     saveRes['meanMap'] = mean
     saveRes['stdevMap'] = stdev
-    print(saveRes.get('meanMap').getInfo())
+    # print(saveRes.get('meanMap').getInfo())
 
     return saveRes
-  elif product == products.modisFapar:
+  elif product == products.modisFpar:
     # Apply scale to fAPAR data
     def scaleFapar(image, bandName):
       # fAPAR data scale factor = 0.01
@@ -86,11 +86,11 @@ def calculateMeanStdev(product, bandName, doy, step, start, finish, point, study
       .filterBounds(point) \
       .filterDate(start, finish) \
       .filter(doyFilter) \
-      .map(addMask(product, product, isItNight)) \
+      .map(addMask(product, resolution, product, isItNight)) \
       .map(addMaskedData(product)) \
       .map(scaleFapar(product, bandName))
       
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
     
     mean = filteredCollection.select('faparPercent').mean().clip(studyArea)
     stdev = filteredCollection.select('faparPercent').reduce(ee.Reducer.stdDev()).clip(studyArea)
@@ -98,16 +98,16 @@ def calculateMeanStdev(product, bandName, doy, step, start, finish, point, study
     saveRes = dict()
     saveRes['meanMap'] = mean
     saveRes['stdevMap'] = stdev
-    print(saveRes.get('meanMap').getInfo())
+    # print(saveRes.get('meanMap').getInfo())
 
     return saveRes
   elif product == products.modisEt:
     # Apply scale to Evapotranspiration data
     def scaleET(image, bandName):
-      # fAPAR data scale factor = 0.01
+      # fAPAR data scale factor = 0.1
       return lambda image: image.addBands(image.select(bandName) \
           .multiply(ee.Image.constant(0.1)) \
-          .rename('ET_kg_m2'))
+          .rename('ET_final'))
  
     # filter collection
     # add quality mask to collection and update mask after
@@ -115,19 +115,20 @@ def calculateMeanStdev(product, bandName, doy, step, start, finish, point, study
       .filterBounds(point) \
       .filterDate(start, finish) \
       .filter(doyFilter) \
-      .map(addMask(product, product, isItNight)) \
+      .map(addMask(product, resolution, product, isItNight)) \
       .map(addMaskedData(product)) \
       .map(scaleET(product, bandName))
       
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
     
-    mean = filteredCollection.select('ET_kg_m2').mean().clip(studyArea)
-    stdev = filteredCollection.select('ET_kg_m2').reduce(ee.Reducer.stdDev()).clip(studyArea)
+    mean = filteredCollection.select('ET_final').mean().clip(studyArea)
+    stdev = filteredCollection.select('ET_final').reduce(ee.Reducer.stdDev()).clip(studyArea)
     
     saveRes = dict()
     saveRes['meanMap'] = mean
     saveRes['stdevMap'] = stdev
-    print(saveRes.get('meanMap').getInfo())
+    # print(saveRes.get('meanMap').getInfo())
+    return saveRes
   else:
     print('Error in "calculateMeanStdev" function def')
     return -1
@@ -180,11 +181,12 @@ def standardizeVariables(product, bandName, year, doy, step, point, mean, stdev,
       .filterBounds(point) \
       .filterDate(start, finish) \
       .filter(doyFilter) \
-      .map(qualityMask(product, resolution, product, isItNight)) \
+      .map(addMask(product, resolution, product, isItNight)) \
+      .map(addMaskedData(product)) \
       .map(addCelsiusBand(product, bandName)) \
       
   
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
     current = filteredCollection.first()
     
     # standardize dataset
@@ -193,14 +195,14 @@ def standardizeVariables(product, bandName, year, doy, step, point, mean, stdev,
       
     return standardizedResult
 
-  elif product == products.modisFapar:
-    print(bandName)
+  elif product == products.modisFpar:
+    # print(bandName)
       
     # Apply scale to fAPAR data
     def scaleFapar(image, bandName):
       # fAPAR data scale factor = 0.01
       return lambda image: image.addBands(image.select(bandName) \
-          .multiply(ee.Image.constant(1)) \
+          .multiply(ee.Image.constant(0.01)) \
           .rename('faparPercent'))
 
     # filter collection
@@ -214,7 +216,7 @@ def standardizeVariables(product, bandName, year, doy, step, point, mean, stdev,
       .map(scaleFapar(product, bandName))
       
   
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
 
     current = filteredCollection.first()
     
@@ -225,11 +227,11 @@ def standardizeVariables(product, bandName, year, doy, step, point, mean, stdev,
     return standardizedResult
   elif product == products.modisEt:
     # Apply scale to Evapotranspiration data
-    # // ET data scale factor = 0.01
+    # // ET data scale factor = 0.1
     def scaleET(image, bandName):
       return lambda image: image.addBands(image.select(bandName) \
           .multiply(ee.Image.constant(0.1)) \
-          .rename('ET_kg_m2'))
+          .rename('ET_final'))
 
       
     # filter collection
@@ -243,17 +245,17 @@ def standardizeVariables(product, bandName, year, doy, step, point, mean, stdev,
       .map(scaleET(product, bandName))
       
   
-    print(filteredCollection.getInfo())
+    # print(filteredCollection.getInfo())
 
     current = filteredCollection.first()
       
-    print(current.getInfo())
+    # print(current.getInfo())
     
     # standardize dataset
-    anomaly = current.select('ET_kg_m2').subtract(mean)
+    anomaly = current.select('ET_final').subtract(mean)
     standardizedResult = anomaly.divide(stdev).focal_mean()
       
-    print(standardizedResult.getInfo())
+    # print(standardizedResult.getInfo())
       
     return standardizedResult
 

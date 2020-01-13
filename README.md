@@ -1,17 +1,16 @@
 # MODIS data processing package for drought monitoring
 ## Made by using Google Earth Engine Python API
 
-! This is an ongoing project, will be update in the future !
+This is an ongoing project, will be updated in the future
 
-This package applies cloud masking (for every dataset, with the appropriate quality assessment bands), and then calculates standardized 8-day composite images (reference period: 2000-2017) and saves them to Google Drive automatically.
+This package applies cloud masking (for every dataset, with the appropriate quality assessment bands), and then calculates standardized 8-day composite images (reference period: 2000-2019) and saves them to Google Drive automatically. With batch processing.
 
 The following MODIS products are included (MODIS Collection 6):
 * Surface Reflectance 8-day 500m: 'MODIS/006/MOD09A1'
 * Surface Temperature 8-day 1000m: 'MODIS/006/MOD11A2'
-* fAPAR 4-day 500m: 'MODIS/006/MCD15A3H'
+* fAPAR 8-day 500m: 'MODIS/006/MOD15A2H'
 * Evapotranspiration 8-day 500m: 'MODIS/006/MOD16A2'
 
-Currently, you can only calculate NDDI, NDVI and NDDI indices from surface reflectance data. The others are not tested and not ready yet.
 
 You can change the study area if you want.
 

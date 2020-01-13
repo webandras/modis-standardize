@@ -56,11 +56,10 @@ def qualityMask(image, resolution, product, night):
   elif product == products.modisTemp:  # Surface Temperature
     if night == True:
       # Extract QC band
-      qualityControl = image.select('QC_Day')
-    
+      qualityControl = image.select('QC_Night')
     elif night == False:
       # Extract QC band
-      qualityControl = image.select('QC_Night')
+      qualityControl = image.select('QC_Day')
     else:
       print('"night" argument type error: only Boolean values accepted. :(')
       return -1
@@ -68,7 +67,7 @@ def qualityMask(image, resolution, product, night):
     # Where data quality is appropiate.
     qaFlag = getQABits(qualityControl,0,1,"QA Flag").eq(0)
     dataQuality = getQABits(qualityControl,2,3,"Data Quality").eq(0)
-    lstError = getQABits(qualityControl,15,15,"LST error").lte(1)
+    lstError = getQABits(qualityControl,6,7,"LST error").lte(1) # Average LST error ≤ 2K
     
     # Where data quality is appropiate.
     mask = qaFlag.And(dataQuality).And(lstError)
@@ -116,6 +115,7 @@ def addMask(image, resolution, product, night):
 
 # Uses the mask on the properties of the ImageCollection
 def addMaskedData(image):
-  return lambda image: image.addBands(image.updateMask(image.select('QA_mask')))
+  return lambda image: image.updateMask(image.select('QA_mask'))
+  # return lambda image: image.addBands(image.updateMask(image.select('QA_mask')))
 
 
