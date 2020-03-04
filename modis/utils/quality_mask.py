@@ -43,16 +43,30 @@ def qualityMask(image, resolution, product, night):
     state =  image.select('StateQA')
       
     # Where data quality is appropiate.
-    cloudState = getQABits(state,0,1,"Cloud State")
-    cloudShadow = getQABits(state,2,2,"Cloud Shadow")
+    cloudState = getQABits(state,0,1,"Cloud State").eq(0)
+    cloudShadow = getQABits(state,2,2,"Cloud Shadow").eq(0)
      
-    red = getQABits(qualityControl,2,5,"Band 1 QA")
-    nir = getQABits(qualityControl,6,9,"Band 2 QA")
-    swir = getQABits(qualityControl,26,29,"Band 7 QA")
+    red = getQABits(qualityControl,2,5,"Band 1 QA").eq(0)
+    nir = getQABits(qualityControl,6,9,"Band 2 QA").eq(0)
+    swir = getQABits(qualityControl,26,29,"Band 7 QA").eq(0)
 
+    # Create mask.
+    mask = cloudState.And(cloudShadow).And(red).And(nir).And(swir)
+
+  elif product == products.modisEvi: # EVI
+    # Extract 'QC' and 'StateQA' bands
+    qualityControl = image.select('DetailedQA')
+    summaryQC = image.select('SummaryQA')
+      
     # Where data quality is appropiate.
-    mask = cloudState.eq(0).And(cloudShadow.eq(0)).And(red.eq(0)).And(nir.eq(0)).And(swir.eq(0))
-
+    quality = getQABits(qualityControl,0,1,"VI Quality").lte(1)
+    usefulness= getQABits(qualityControl,2,5,"VI Usefulness").lte(5)
+    possibleShadow = getQABits(qualityControl,15,15,"Possible shadow").eq(0)
+    reliability = getQABits(summaryQC,0,1,"SummaryQA").lte(1)
+    
+    # Create mask.
+    mask = quality.And(usefulness).And(possibleShadow).And(reliability)
+  
   elif product == products.modisTemp:  # Surface Temperature
     if night == True:
       # Extract QC band
@@ -69,7 +83,7 @@ def qualityMask(image, resolution, product, night):
     dataQuality = getQABits(qualityControl,2,3,"Data Quality").eq(0)
     lstError = getQABits(qualityControl,6,7,"LST error").lte(1) # Average LST error ≤ 2K
     
-    # Where data quality is appropiate.
+    # Create mask.
     mask = qaFlag.And(dataQuality).And(lstError)
     
   elif product == products.modisEt: # Evapotranspiration data
@@ -82,7 +96,7 @@ def qualityMask(image, resolution, product, night):
     cloudStateF = getQABits(qualityControl, 3, 4,"Cloud State").eq(0)
     scf_qc = getQABits(qualityControl, 5, 7,"SCF_QC").lte(1)
     
-    # Where data quality is appropiate.
+    # Create mask.
     mask = modlandQCBits.And(sensor).And(cloudStateF).And(scf_qc)
   
   elif product == products.modisFpar: # fAPAR data
@@ -95,7 +109,7 @@ def qualityMask(image, resolution, product, night):
     cloudStateF = getQABits(qualityControl, 3, 4,"Cloud State").eq(0)
     scf_qc = getQABits(qualityControl, 5, 7,"SCF_QC").lte(1)
     
-    # Where data quality is appropiate.
+    # Create mask.
     mask = modlandQCBits.And(sensor).And(cloudStateF).And(scf_qc)
 
   else:
@@ -115,7 +129,7 @@ def addMask(image, resolution, product, night):
 
 # Uses the mask on the properties of the ImageCollection
 def addMaskedData(image):
-  return lambda image: image.updateMask(image.select('QA_mask'))
-  # return lambda image: image.addBands(image.updateMask(image.select('QA_mask')))
+  return lambda image: image.addBands(image.updateMask(image.select('QA_mask')))
+  # return lambda image: image.updateMask(image.select('QA_mask'))
 
 

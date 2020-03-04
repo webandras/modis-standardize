@@ -11,3 +11,6 @@ class Products:
   #Evapotranspiration 8-day 500m
   modisEt = 'MODIS/006/MOD16A2' # => ET
 
+  # EVI 16-day 500m
+  modisEvi = 'MODIS/006/MOD13A1' # => EVI
+

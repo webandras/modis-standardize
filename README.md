@@ -1,15 +1,29 @@
 # MODIS data processing package for drought monitoring
 ## Made by using Google Earth Engine Python API
 
-This is an ongoing project, will be updated in the future
+This is an ongoing project, will be updated in the future.
+Updated in Mar 4, 2020
 
-This package applies cloud masking (for every dataset, with the appropriate quality assessment bands), and then calculates standardized 8-day composite images (reference period: 2000-2019) and saves them to Google Drive automatically. With batch processing.
+This package applies cloud masking (for every dataset, with the appropriate quality assessment bands), and then calculates standardized 8-day composite images (reference period: 2000-2019, only growing season, doy: 89-273) and saves them to Google Drive automatically with batch processing.
 
 The following MODIS products are included (MODIS Collection 6):
 * Surface Reflectance 8-day 500m: 'MODIS/006/MOD09A1'
 * Surface Temperature 8-day 1000m: 'MODIS/006/MOD11A2'
 * fAPAR 8-day 500m: 'MODIS/006/MOD15A2H'
 * Evapotranspiration 8-day 500m: 'MODIS/006/MOD16A2'
+* EVI 16-day 500m: 'MODIS/006/MOD13A1'
+
+The following indices or variables can be calculated/processed:
+* NDDI (Normalized Difference Drought Index)
+* NDVI (Normalized Difference Vegetation Index)
+* NDWI (Normalized Difference Water Index)
+* EVI (Enhanced Vegetation Index)
+* Evapotranspiration, ET/PET ratio
+* fAPAR (Fraction of Absorbed Photosynthetically Active Radiation)
+* Day-time LST (Land Surface Temperature)
+* Night-time LST
+* TVX (Temperature-Vegetation Index) = Day-time LST / NDVI ratio 
+* TWY (Temperature-Water Index) = Day-time LST / NDWI ratio (completely new index, no one has ever used it before!)
 
 
 You can change the study area if you want.
@@ -33,8 +47,8 @@ You can change the study area if you want.
 ````
 
 Conda and GEE documentation pages:
-https://conda.io/projects/conda/en/latest/user-guide/install/index.html
-https://developers.google.com/earth-engine/python_install-conda.html
+* https://conda.io/projects/conda/en/latest/user-guide/install/index.html
+* https://developers.google.com/earth-engine/python_install-conda.html
 
 
 ### Run package
@@ -48,7 +62,38 @@ The main script to run is: 'app.py' in the root of 'modis' folder. Check it out 
 `python -m modis`
 
 
+### Folder structure
 
+Run `tree /f` in project folder.
 
+````
+│   .gitignore
+│   LICENCE
+│   README.md
+│
+├───.vscode
+│       settings.json
+│
+└───modis
+    │   app.py
+    │   __init__.py
+    │   __main__.py
+    │
+    ├───data
+    │   │   products.py
+    │   │   __init__.py
+    │   │
+    │   └───__pycache__
+    │
+    ├───utils
+    │   │   calculations.py
+    │   │   indices.py
+    │   │   quality_mask.py
+    │   │   __init__.py
+    │   │
+    │   └───__pycache__
+    │
+    └───__pycache__
+````
 
 
